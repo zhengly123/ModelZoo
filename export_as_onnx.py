@@ -14,13 +14,15 @@ from src.net48 import Net48
 from src.testnet import TestNet
 from src.gcn_1703_02719 import GCN
 from src.unet import UNet
+# from src.wdsr_a import MODEL as WDSR
+from src.super_resolution.main import arch as WDSR # git@github.com:achie27/super-resolution.git
 
 
 batch_size = 1
 
 
 def export_inferred_onnx(name, input_shape, precision=32):
-    fn = f"onnx/{name}.onnx"
+    fn = f"onnx/{name}.bs{batch_size}.onnx"
     dummy_input = torch.randn(*input_shape)
     print(name, '='*20)
     if name == 'csrnet':
@@ -50,6 +52,8 @@ def export_inferred_onnx(name, input_shape, precision=32):
         model = GCN(21)
     elif name =='unet':
         model = UNet(3, 10, [32, 64, 32], 0, 3, group_norm=0)
+    elif name in ['srcnn', 'fsrcnn', 'espcn', 'edsr', 'srgan', 'esrgan', 'prosr']:
+        model = WDSR(name, 4, True).getModel()
     else:
         model = getattr(models, name)(pretrained=True)
 
@@ -111,11 +115,19 @@ def export_inferred_onnx(name, input_shape, precision=32):
 # input_shape = (batch_size, 256, 24, 24)
 # export_inferred_onnx('TestNet', input_shape)
 
-input_shape = (1, 3, 224, 224)
-export_inferred_onnx('GCN', input_shape)
+# input_shape = (1, 3, 224, 224)
+# export_inferred_onnx('GCN', input_shape)
 
 # input_shape = (batch_size, 3, 224, 224)
 # export_inferred_onnx('regnet', input_shape)
 
 # input_shape = (batch_size, 3, 224, 224)
 # export_inferred_onnx('unet', input_shape)
+
+# for name in ['srcnn', 'fsrcnn', 'espcn', 'edsr', 'srgan', 'esrgan', 'prosr']:
+#     print(f'Generate {name}')
+#     if name in ['srcnn', 'fsrcnn', 'espcn', 'srgan']:
+#         input_shape = (batch_size, 1, 32, 32)
+#     else:
+#         input_shape = (batch_size, 3, 32, 32)
+#     export_inferred_onnx(name, input_shape)
